@@ -36,9 +36,22 @@ pub fn MyArray(comptime T: type) type {
             return std.sort.asc(T)(context, a, b);
         }
 
-        // TODO, until we actually get to implementing some sorts
+        // It's bubble sort!
         pub fn sort(self: *MyArray(T)) void {
-            std.sort.sort(T, self.contents, {}, cmp);
+            // An array is sorted provided that x[i] <= x[i+1] for all i.
+            var outer: usize = 0;
+            while (outer < self.length) {
+                var inner: usize = 0;
+                while (inner < self.length - 1 - outer) {
+                    if (self.contents[inner] > self.contents[inner + 1]) {
+                        const temp = self.contents[inner];
+                        self.contents[inner] = self.contents[inner + 1];
+                        self.contents[inner + 1] = temp;
+                    }
+                    inner = inner + 1;
+                }
+                outer = outer + 1;
+            }
         }
 
         pub fn set(self: *MyArray(T), index: usize, value: T) void {
@@ -93,7 +106,7 @@ pub fn MyArray(comptime T: type) type {
             defer std.debug.print("Binary search took {d} \n", .{timer.read()});
 
             while (low < high) {
-                var midpoint = low + (high - low) / 2; // its low PLUS (high - low) / 2  
+                var midpoint = low + (high - low) / 2; // its low PLUS (high - low) / 2
                 var value = self.contents[midpoint];
 
                 if (value == needle) {
@@ -117,6 +130,21 @@ test {
     // Test 1: Empty Array
     var arr = try MyArray(i32).init(&allocator, 10);
     defer arr.deinit(&allocator);
+
+    arr.set(0, 3);
+    arr.set(1, 2);
+    arr.set(2, 9);
+    arr.set(3, 7);
+    arr.set(4, 1);
+    arr.set(5, 2);
+    arr.set(6, 4);
+    arr.set(7, 5);
+    arr.set(8, 6);
+
+    arr.sort();
+    arr.print();
+
+    // Test Searches
     arr.zeroes();
     try std.testing.expect(try arr.index_of_binary(10) == null);
 
@@ -132,9 +160,9 @@ test {
     arr.set(9, 10);
     arr.sort();
 
-    try std.testing.expect(try arr.index_of_binary(5) != null );
-    try std.testing.expect(try arr.index_of_binary(1) != null );
-    try std.testing.expect(try arr.index_of_binary(7) != null );
-    try std.testing.expect(try arr.index_of_binary(10) != null );
-    try std.testing.expect(try arr.index_of_binary(0) == null );
+    try std.testing.expect(try arr.index_of_binary(5) != null);
+    try std.testing.expect(try arr.index_of_binary(1) != null);
+    try std.testing.expect(try arr.index_of_binary(7) != null);
+    try std.testing.expect(try arr.index_of_binary(10) != null);
+    try std.testing.expect(try arr.index_of_binary(0) == null);
 }

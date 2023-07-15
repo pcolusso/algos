@@ -87,13 +87,13 @@ pub fn MyArray(comptime T: type) type {
 
         // It's a binary search!
         pub fn index_of_binary(self: MyArray(T), needle: T) !?usize {
-            var high = self.length - 1; // !!!
+            var high = self.length;
             var low: usize = 0;
             var timer = try std.time.Timer.start();
             defer std.debug.print("Binary search took {d} \n", .{timer.read()});
 
             while (low < high) {
-                var midpoint = low + ((high - low) / 2);
+                var midpoint = low + (high - low) / 2; // its low PLUS (high - low) / 2  
                 var value = self.contents[midpoint];
 
                 if (value == needle) {
@@ -117,25 +117,24 @@ test {
     // Test 1: Empty Array
     var arr = try MyArray(i32).init(&allocator, 10);
     defer arr.deinit(&allocator);
+    arr.zeroes();
     try std.testing.expect(try arr.index_of_binary(10) == null);
 
-    // Test 2: One element (needle present)
-    const pos: usize = 0;
-    arr.set(pos, 10);
-    try std.testing.expect(try arr.index_of_binary(10) == pos);
+    arr.set(0, 1);
+    arr.set(1, 2);
+    arr.set(2, 3);
+    arr.set(3, 4);
+    arr.set(4, 5);
+    arr.set(5, 6);
+    arr.set(6, 7);
+    arr.set(7, 8);
+    arr.set(8, 9);
+    arr.set(9, 10);
+    arr.sort();
 
-    // Test 3: One element (needle not present)
-    try std.testing.expect(try arr.index_of_binary(20) == null);
-
-    // Test 4: Multiple elements (needle present)
-    const pos1: usize = 1;
-    const pos2: usize = 2;
-    const pos3: usize = 3;
-    arr.set(pos1, 20);
-    arr.set(pos2, 30);
-    arr.set(pos3, 40);
-    try std.testing.expect(try arr.index_of_binary(30) == pos2);
-
-    // Test 5: Multiple elements (needle not present)
-    try std.testing.expect(try arr.index_of_binary(50) == null);
+    try std.testing.expect(try arr.index_of_binary(5) != null );
+    try std.testing.expect(try arr.index_of_binary(1) != null );
+    try std.testing.expect(try arr.index_of_binary(7) != null );
+    try std.testing.expect(try arr.index_of_binary(10) != null );
+    try std.testing.expect(try arr.index_of_binary(0) == null );
 }

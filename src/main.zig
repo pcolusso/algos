@@ -59,6 +59,8 @@ pub fn main() !void {
     try arraylist.push(4);
     try arraylist.push(5);
 
+    std.debug.print("Popped: {?}, {?}, {?}\n", .{ arraylist.pop(), arraylist.pop(), arraylist.pop() });
+    std.debug.print("Popped: {?}, {?}, {?}\n", .{ arraylist.pop(), arraylist.pop(), arraylist.pop() });
 }
 
 test {

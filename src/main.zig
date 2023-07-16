@@ -2,6 +2,7 @@ const std = @import("std");
 const a = @import("array.zig");
 const crystal = @import("crystal.zig");
 const ll = @import("ll.zig");
+const q = @import("queue.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -34,6 +35,19 @@ pub fn main() !void {
     try list.remove_at(3);
     try list.insert_end(12);
     list.print();
+
+    const MyQueue = q.Queue(i8);
+    var queue = MyQueue.init(&allocator);
+    defer queue.deinit();
+
+    try queue.enqueue(1);
+    try queue.enqueue(2);
+    try queue.enqueue(3);
+    try queue.enqueue(4);
+
+    std.debug.print("Dequeued: {?}\n", .{queue.dequeue()});
+    std.debug.print("Dequeued: {?}\n", .{queue.dequeue()});
+    std.debug.print("Dequeued: {?}\n", .{queue.dequeue()});
 }
 
 test {

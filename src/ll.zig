@@ -37,6 +37,28 @@ pub fn LinkedList(comptime T: type) type {
             self.head = node;
         }
 
+        pub fn length(self: *LinkedList(T)) usize {
+            var iter = self.iterator();
+            var count: usize = 0;
+            while (iter.next()) |node| {
+                _ = node;
+                count += 1;
+            }
+            return count;
+        }
+
+        pub fn get_at_idx(self: *LinkedList(T), index: usize) usize {
+            var iter = self.iterator();
+            var count: usize = 0;
+            while (iter.next()) |node| {
+                if (count == index) |c| {
+                    return c.value;
+                }
+                _ = node;
+                count += 1;
+            }
+        }
+
         pub fn print(self: *LinkedList(T)) void {
             var iter = self.iterator();
             while (iter.next()) |node| {

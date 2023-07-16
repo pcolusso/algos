@@ -47,15 +47,57 @@ pub fn LinkedList(comptime T: type) type {
             return count;
         }
 
-        pub fn get_at_idx(self: *LinkedList(T), index: usize) usize {
+        pub fn get_at(self: *LinkedList(T), index: usize) ?*Node {
             var iter = self.iterator();
             var count: usize = 0;
             while (iter.next()) |node| {
-                if (count == index) |c| {
-                    return c.value;
+                if (count == index) {
+                    return node;
                 }
-                _ = node;
                 count += 1;
+            }
+            return null;
+        }
+
+        const Error = error{OutOfBounds};
+
+        pub fn insert_after(self: *LinkedList(T), index: usize, value: T) !void {
+            var node = try self.allocator.create(Node);
+            node.*.value = value;
+
+            var prev = self.get_at(index);
+
+            if (prev) |p| {
+                var next = p.next;
+                p.next = node;
+                node.next = next;
+            } else {
+                self.allocator.destroy(node);
+
+                return Error.OutOfBounds;
+            }
+        }
+
+        pub fn insert_end(self: *LinkedList(T), value: T) !void {
+            const l = self.length();
+            const index = if (l == 0) 0 else l - 1;
+
+            try self.insert_after(index, value);
+        }
+
+        pub fn remove_at(self: *LinkedList(T), index: usize) !void {
+            var node = self.get_at(index);
+            // If we're at the beginning, we need to set head to node.next
+            // If we're in the middle, we'll need to make prev point to node.next
+            if (node) |n| {
+                if (index == 0) {
+                    self.head = n.next;
+                } else if (self.get_at(index - 1)) |prev| {
+                    prev.next = n.next;
+                }
+                self.allocator.destroy(n);
+            } else {
+                return Error.OutOfBounds;
             }
         }
 

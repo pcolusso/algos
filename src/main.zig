@@ -27,8 +27,12 @@ pub fn main() !void {
     var list = MyLL.init(&allocator);
     defer list.deinit();
 
+    try list.prepend(3);
     try list.prepend(1);
-    try list.prepend(2);
+    try list.insert_after(0, 2);
+    try list.insert_after(2, 4);
+    try list.remove_at(3);
+    try list.insert_end(12);
     list.print();
 }
 

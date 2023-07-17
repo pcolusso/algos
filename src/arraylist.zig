@@ -9,12 +9,7 @@ pub fn ArrayList(comptime T: type) type {
         allocator: *std.mem.Allocator,
 
         pub fn init(allocator: *std.mem.Allocator) !ArrayList(T) {
-            return ArrayList(T) {
-                .allocator = allocator,
-                .length = 0,
-                .capacity = default_capacity,
-                .contents = try allocator.alloc(T, default_capacity)
-            };
+            return ArrayList(T){ .allocator = allocator, .length = 0, .capacity = default_capacity, .contents = try allocator.alloc(T, default_capacity) };
         }
 
         pub fn deinit(self: *ArrayList(T)) void {
@@ -31,14 +26,13 @@ pub fn ArrayList(comptime T: type) type {
             std.mem.copy(T, new_buffer, self.contents);
 
             // Update the capacity
-            std.debug.print("Growing from {} to {}\n", .{self.capacity, new_capacity});
+            std.debug.print("Growing from {} to {}\n", .{ self.capacity, new_capacity });
             self.capacity = new_capacity;
 
             // Delete the old buffer.
             const old_buffer = self.contents;
             self.contents = new_buffer;
             self.allocator.free(old_buffer);
-            
         }
 
         pub fn push(self: *ArrayList(T), value: T) !void {
@@ -51,7 +45,8 @@ pub fn ArrayList(comptime T: type) type {
             self.length = self.length + 1;
         }
 
-        pub fn pop(self: *ArrayList(T)) !void {
+        pub fn pop(self: *ArrayList(T)) ?T {
+            if (self.length == 0) return null;
             const value = self.contents[self.length];
             if (self.length > 0) self.length = self.length - 1;
             return value;

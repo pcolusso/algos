@@ -4,6 +4,7 @@ const crystal = @import("crystal.zig");
 const ll = @import("ll.zig");
 const q = @import("queue.zig");
 const al = @import("arraylist.zig");
+const maze = @import("maze.zig");
 
 pub fn main() !void {
     var gpa = std.heap.GeneralPurposeAllocator(.{}){};
@@ -61,8 +62,18 @@ pub fn main() !void {
 
     std.debug.print("Popped: {?}, {?}, {?}\n", .{ arraylist.pop(), arraylist.pop(), arraylist.pop() });
     std.debug.print("Popped: {?}, {?}, {?}\n", .{ arraylist.pop(), arraylist.pop(), arraylist.pop() });
+
+    var m = try maze.Maze.init(&allocator);
+    defer m.deinit();
+    m.print();
+    const res = try m.solve();
+    for (res.items) |item| {
+        std.debug.print("{},{}\n", .{item.x, item.y});
+    }
+    res.deinit();
 }
 
 test {
     @import("std").testing.refAllDecls(@This());
 }
+

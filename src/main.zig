@@ -16,7 +16,7 @@ pub fn main() !void {
     defer my_array.deinit(&allocator);
 
     my_array.random();
-    my_array.sort();
+    my_array.sort2();
 
     const chosen_elem = my_array.get_random();
 
@@ -68,7 +68,7 @@ pub fn main() !void {
     m.print();
     const res = try m.solve();
     for (res.items) |item| {
-        std.debug.print("{},{}\n", .{item.x, item.y});
+        std.debug.print("{},{}\n", .{ item.x, item.y });
     }
     res.deinit();
 }
@@ -76,4 +76,3 @@ pub fn main() !void {
 test {
     @import("std").testing.refAllDecls(@This());
 }
-

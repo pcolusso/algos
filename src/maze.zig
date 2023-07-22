@@ -23,10 +23,10 @@ const Point = struct { x: i8, y: i8 };
 const simple_maze: [30]Cell = [_]Cell{
     Cell.wall, Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.end,   Cell.wall,
     Cell.wall, Cell.space, Cell.space, Cell.space, Cell.space, Cell.space, Cell.space, Cell.space, Cell.space, Cell.wall,
-    Cell.wall, Cell.start, Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall, Cell.wall,
+    Cell.wall, Cell.start, Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,  Cell.wall,
 };
 
-const Error = error{OOB, NoStart, NoEnd };
+const Error = error{ OOB, NoStart, NoEnd };
 
 pub const Maze = struct {
     width: usize,
@@ -121,13 +121,16 @@ pub const Maze = struct {
     }
 
     fn walk(self: *const Maze, pos: Point, seen: *List, path: *List) !bool {
-        std.debug.print("Inspecting {d}, {d} -> ", .{pos.x, pos.y});
-
+        std.debug.print("Inspecting {d}, {d} -> ", .{ pos.x, pos.y });
+        // If OOB, go back
         if (!self.in_bounds(pos)) return false;
         const cell = self.u_get(pos);
         std.debug.print("It's a {any}\n", .{cell});
+        // It's a wall, go back
         if (cell == Cell.wall) return false;
+        // If we've seein it, go back
         if (contains(seen, pos)) return false;
+        // Ayy, we've made it.
         if (cell == Cell.end) {
             try path.*.append(pos);
             return true;

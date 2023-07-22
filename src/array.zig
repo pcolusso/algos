@@ -54,6 +54,48 @@ pub fn MyArray(comptime T: type) type {
             }
         }
 
+        fn quicksort(arr: *[]T, low: usize, high: usize) void {
+            // Recursion! So remember out base case, when low == high
+            if (low >= high) {
+                return;
+            }
+
+            const pivot_index = partition(arr, low, high);
+
+            // We never want to be sorting with our pivot, notice how we go around it.
+            quicksort(arr, low, pivot_index - 1);
+            quicksort(arr, pivot_index + 1, high);
+        }
+
+        fn partition(arr: *[]T, low: usize, high: usize) usize {
+            const pivot = arr.*[high]; // Not ideal, but simple for this impl
+            var index: i64 = @intCast(i64, low) - 1;
+            // Walk from the low to the high, but not including.
+            var i = low;
+            while (i < high) : (i += 1) {
+                if (arr.*[i] <= pivot) {
+                    index += 1; // We do this first so that on first run, we end up at 0.
+                    // swapsies
+                    const tmp = arr.*[i];
+                    arr.*[i] = arr.*[@intCast(usize, index)];
+                    arr.*[@intCast(usize, index)] = tmp;
+                }
+            }
+
+            // We now need to move our pivot value into it's place
+            index += 1;
+            arr.*[high] = arr.*[@intCast(usize, index)];
+            arr.*[@intCast(usize, index)] = pivot;
+
+            return @intCast(usize, index);
+        }
+
+        // It's QuickSort!
+        pub fn sort2(self: *MyArray(T)) void {
+            // Two functions, "partition" which chooses a pivot, and the actual recursive qs function.
+            quicksort(&self.contents, 0, self.length - 1);
+        }
+
         pub fn set(self: *MyArray(T), index: usize, value: T) void {
             self.contents[index] = value;
         }
@@ -141,7 +183,7 @@ test {
     arr.set(7, 5);
     arr.set(8, 6);
 
-    arr.sort();
+    arr.sort2();
     arr.print();
 
     // Test Searches

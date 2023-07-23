@@ -130,3 +130,72 @@ pub fn LinkedList(comptime T: type) type {
         }
     };
 }
+
+test "can prepend to list" {
+    const expect = std.testing.expect;
+    var allocator = std.testing.allocator;
+    var list = LinkedList(i32).init(&allocator);
+    defer list.deinit();
+
+    try list.prepend(3);
+    try list.prepend(2);
+    try list.prepend(1);
+
+    try expect(list.length() == 3);
+    try expect(list.get_at(0).?.*.value == 1);
+    try expect(list.get_at(1).?.*.value == 2);
+    try expect(list.get_at(2).?.*.value == 3);
+}
+
+// TODO: Fix cannot insert_end when list is empty.
+test "can add at end of list" {
+    const expect = std.testing.expect;
+    var allocator = std.testing.allocator;
+    var list = LinkedList(i32).init(&allocator);
+    defer list.deinit();
+
+    try list.prepend(1);
+    try list.insert_end(2);
+    try list.insert_end(3);
+
+    try expect(list.length() == 3);
+    try expect(list.get_at(0).?.*.value == 1);
+    try expect(list.get_at(1).?.*.value == 2);
+    try expect(list.get_at(2).?.*.value == 3);
+}
+
+test "can insert_after" {
+    const expect = std.testing.expect;
+    var allocator = std.testing.allocator;
+    var list = LinkedList(i32).init(&allocator);
+    defer list.deinit();
+
+    try list.prepend(1);
+    try list.prepend(2);
+    try list.prepend(3);
+
+    try list.insert_after(1, 4);
+
+    try expect(list.length() == 4);
+    try expect(list.get_at(0).?.*.value == 3);
+    try expect(list.get_at(1).?.*.value == 2);
+    try expect(list.get_at(2).?.*.value == 4);
+    try expect(list.get_at(3).?.*.value == 1);
+}
+
+test "can remove_at" {
+    const expect = std.testing.expect;
+    var allocator = std.testing.allocator;
+    var list = LinkedList(i32).init(&allocator);
+    defer list.deinit();
+
+    try list.prepend(1);
+    try list.prepend(2);
+    try list.prepend(3);
+
+    try list.remove_at(1);
+
+    try expect(list.length() == 2);
+    try expect(list.get_at(0).?.*.value == 3);
+    try expect(list.get_at(1).?.*.value == 1);
+}

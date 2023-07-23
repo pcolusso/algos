@@ -7,13 +7,14 @@ pub fn DoublyLinkedList(comptime T: type) type {
         head: ?*Node = null,
         tail: ?*Node = null,
         length: usize = 0,
+        allocator: *std.mem.Allocator,
 
-        pub fn init(allocator: *std.mem.allocator) DoublyLinkedList(T) {
+        pub fn init(allocator: *std.mem.Allocator) DoublyLinkedList(T) {
             return DoublyLinkedList(T){ .allocator = allocator };
         }
 
         pub fn deinit(self: *DoublyLinkedList(T)) void {
-            var iter = self.iterator();
+            var iter = self.iter_forwards();
             while (iter.next()) |node| {
                 self.allocator.destroy(node);
             }
@@ -23,8 +24,8 @@ pub fn DoublyLinkedList(comptime T: type) type {
             list: *DoublyLinkedList(T),
             cursor: ?*Node,
 
-            pub fn init(list: *DoublyLinkedList(T), start: *Node) Iterator {
-                return Iterator{ .list = list, .cursor = start };
+            pub fn init(list: *DoublyLinkedList(T)) Iterator {
+                return Iterator{ .list = list, .cursor = list.head orelse null };
             }
 
             pub fn next(self: *Iterator) ?*Node {
@@ -34,22 +35,10 @@ pub fn DoublyLinkedList(comptime T: type) type {
                 }
                 return current;
             }
-
-            pub fn prev(self: *Iterator) ?*Node {
-                var current = self.cursor;
-                if (current) |c| {
-                    self.cursor = c.prev;
-                }
-                return current;
-            }
         };
 
         pub fn iter_forwards(self: *DoublyLinkedList(T)) Iterator {
-            return Iterator.init(self, self.head);
-        }
-
-        pub fn iter_backwards(self: *DoublyLinkedList(T)) Iterator {
-            return Iterator.init(self, self.tail);
+            return Iterator.init(self);
         }
 
         pub fn prepend(self: *DoublyLinkedList(T), value: T) !void {
@@ -149,17 +138,35 @@ pub fn DoublyLinkedList(comptime T: type) type {
         pub fn append(self: *DoublyLinkedList(T), value: T) !void {
             var node = try self.allocator.create(Node);
             node.*.value = value;
-            self.length += 1;
 
-            if (self.tail != null) {
+            if (self.length == 0) {
                 self.head = node;
                 self.tail = node;
-                return;
+                self.length += 1;
+            } else {
+                if (self.tail) |t| {
+                    t.next = node;
+                    node.prev = t;
+                }
+                self.tail = node;
+                self.length += 1;
             }
+        }
 
-            node.prev = self.tail;
-            self.tail.next = node.prev;
-            self.tail = node;
+        pub fn debug(self: *DoublyLinkedList(T)) void {
+            std.debug.print("head: {?}, tail: {?}, length: {?}\n", .{ self.head, self.tail, self.length });
         }
     };
+}
+
+test "can append to a list" {
+    var allocator = std.testing.allocator;
+    var list = DoublyLinkedList(i32).init(&allocator);
+    defer list.deinit();
+
+    try list.append(1);
+    try list.append(2);
+    try list.append(3);
+
+    try std.testing.expect(list.length == 3);
 }

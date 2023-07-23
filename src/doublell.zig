@@ -84,7 +84,7 @@ pub fn DoublyLinkedList(comptime T: type) type {
         const Error = error{ OutOfBounds, NotFound };
 
         pub fn find(self: *DoublyLinkedList(T), item: T) ?*Node {
-            const iter = self.iter_forwards();
+            var iter = self.iter_forwards();
             while (iter.next()) |node| {
                 if (node.value == item) {
                     return node;
@@ -94,67 +94,64 @@ pub fn DoublyLinkedList(comptime T: type) type {
         }
 
         pub fn remove(self: *DoublyLinkedList(T), item: T) !void {
-            const elem = self.find(item);
+            var e = self.find(item);
 
-            if (elem == null) {
+            if (e) |elem| {
+                self.length -= 1;
+
+                if (self.length == 0) {
+                    self.head = null;
+                    self.tail = null;
+                    return;
+                }
+
+                if (elem.prev) |prev| {
+                    prev.next = elem.next;
+                }
+
+                if (elem.next) |next| {
+                    next.prev = elem.prev;
+                }
+
+                if (self.head == elem) {
+                    self.head = elem.next;
+                }
+
+                if (self.tail == elem) {
+                    self.tail = elem.prev;
+                }
+
+                self.allocator.destroy(elem);
+            } else {
                 return Error.NotFound;
             }
-
-            self.length -= 1;
-
-            if (self.length == 0) {
-                self.head = null;
-                self.tail = null;
-                return;
-            }
-
-            if (elem.prev != null) {
-                elem.prev = elem.next;
-            }
-
-            if (elem.next != null) {
-                elem.next = elem.prev;
-            }
-
-            if (self.head == elem) {
-                self.head = elem.next;
-            }
-
-            if (self.tail == elem) {
-                self.tail = elem.prev;
-            }
-
-            self.allocator.destroy(elem);
         }
 
         pub fn insert_at(self: *DoublyLinkedList(T), at: usize, value: T) !void {
             if (at > self.length) {
                 return Error.OutOfBounds;
             } else if (at == self.length) {
-                self.append(value);
+                try self.append(value);
                 return;
             } else if (at == 0) {
-                self.prepend(value);
+                try self.prepend(value);
                 return;
             }
 
-            var index = 0;
-            var current = self.head;
-
-            while (current != null) : (index += 1) {
+            var index: usize= 0;
+            var iter = self.iter_forwards();
+            while (iter.next()) |current| {
                 if (index == at) {
-                    var node = try self.allocator.create(Node);
-                    node.*.value = value;
+                    var node = try Node.init(self.allocator, value);
+                    self.length += 1;
                     node.*.next = current;
                     node.*.prev = current.prev;
                     current.prev = node;
-                    self.length += 1;
-
-                    if (node.prev != null) {
-                        node.prev.next = current; // SHould this be node?
+                    if (node.prev) |prev| {
+                        prev.next = node; // Current?
                     }
                 }
-                current = current.next;
+                index += 1;
             }
         }
 
@@ -176,7 +173,10 @@ pub fn DoublyLinkedList(comptime T: type) type {
         }
 
         pub fn debug(self: *DoublyLinkedList(T)) void {
-            std.debug.print("head: {?}, tail: {?}, length: {?}\n", .{ self.head, self.tail, self.length });
+            var iter = self.iter_forwards();
+            while (iter.next()) |node| {
+                node.print();
+            }
         }
     };
 }
@@ -218,4 +218,44 @@ test "can prepend to a list" {
         try std.testing.expectEqual(node.value, i);
     }
 }
-test "can insert_at" {}
+
+test "can insert_at" {
+    var allocator = std.testing.allocator;
+    var list = DoublyLinkedList(u32).init(&allocator);
+    defer list.deinit();
+
+    try list.append(3);
+    try list.prepend(1);
+    try list.insert_at(1, 2);
+
+    try std.testing.expectEqual(@as(usize, 3), list.length);
+
+    var i: u32 = 0;
+    var iter = list.iter_forwards();
+    while (iter.next()) |node| {
+        i += 1;
+        try std.testing.expectEqual(i, node.value);
+    }
+}
+
+test "can remove an element" {
+    var allocator = std.testing.allocator;
+    var list = DoublyLinkedList(u32).init(&allocator);
+    defer list.deinit();
+
+    try list.append(1);
+    try list.append(2);
+    try list.append(2);
+    try list.append(3);
+
+    try list.remove(2);
+
+    try std.testing.expectEqual(@as(usize, 3), list.length);
+
+    var i: u32 = 0;
+    var iter = list.iter_forwards();
+    while (iter.next()) |node| {
+        i += 1;
+        try std.testing.expectEqual(node.value, i);
+    }
+}

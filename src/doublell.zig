@@ -30,33 +30,36 @@ pub fn DoublyLinkedList(comptime T: type) type {
         pub fn deinit(self: *DoublyLinkedList(T)) void {
             var iter = self.iter_forwards();
             while (iter.next()) |node| {
-                std.debug.print("Destroying 0x{x}", .{@ptrToInt(node)});
                 self.allocator.destroy(node);
             }
         }
 
-        pub const Iterator = struct {
-            cursor: ?*Node,
+        const Direction = enum { Forwards, Backwards };
 
-            pub fn init(list: *DoublyLinkedList(T)) Iterator {
-                std.debug.print("\n============NEW ITER==========\n", .{});
-                return Iterator{ .cursor = list.head };
-            }
+        fn iterate(comptime direction: Direction) type {
+            return struct {
+                cursor: ?*Node,
 
-            pub fn next(self: *Iterator) ?*Node {
-                std.debug.print("Iterating... Current is @ 0x{x}\n", .{@ptrToInt(self.cursor)});
-                const current = self.cursor;
-                if (current) |c| {
-                    self.cursor = c.next;
-                    std.debug.print("Confirmed that 0x{x} is valid!\n", .{@ptrToInt(c)});
-                    c.print();
+                pub fn next(self: *@This()) ?*Node {
+                    var current = self.cursor;
+                    if (current) |c| {
+                        var next_node = if (direction == Direction.Forwards) c.next else c.prev;
+                        self.cursor = next_node;
+                    }
+                    return current;
                 }
-                return current;
-            }
-        };
+            };
+        }
 
-        pub fn iter_forwards(self: *DoublyLinkedList(T)) Iterator {
-            return Iterator.init(self);
+        pub const ForwardIterator = iterate(.Forwards);
+        pub const BackwardsIterator = iterate(.Backwards);
+
+        pub fn iter_forwards(self: *DoublyLinkedList(T)) ForwardIterator {
+            return ForwardIterator{ .cursor = self.head };
+        }
+
+        pub fn iter_backwards(self: *DoublyLinkedList(T)) BackwardsIterator {
+            return BackwardsIterator{ .cursor = self.tail };
         }
 
         pub fn prepend(self: *DoublyLinkedList(T), value: T) !void {
@@ -207,5 +210,12 @@ test "can prepend to a list" {
     try list.prepend(3);
 
     try std.testing.expectEqual(list.length, 3);
+
+    var i: u32 = 0;
+    var iter = list.iter_backwards();
+    while (iter.next()) |node| {
+        i += 1;
+        try std.testing.expectEqual(node.value, i);
+    }
 }
 test "can insert_at" {}

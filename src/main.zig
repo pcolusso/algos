@@ -64,4 +64,6 @@ test {
     _ = @import("ll.zig");
     _ = @import("crystal.zig");
     _ = @import("doublell.zig");
+    _ = @import("binary_search_tree.zig");
+    //TODO: Create tests for ArrayList & Queue
 }

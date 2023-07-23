@@ -165,11 +165,8 @@ pub fn MyArray(comptime T: type) type {
     };
 }
 
-test {
-    // Use MyArray of i32 for these tests.
+test "can perform bubble sort" {
     var allocator = std.testing.allocator;
-
-    // Test 1: Empty Array
     var arr = try MyArray(i32).init(&allocator, 10);
     defer arr.deinit(&allocator);
 
@@ -182,12 +179,42 @@ test {
     arr.set(6, 4);
     arr.set(7, 5);
     arr.set(8, 6);
+    arr.set(9, 0);
+    arr.sort();
 
+    try std.testing.expectEqual(arr.get(0), 0);
+    try std.testing.expectEqual(arr.get(1), 1);
+    try std.testing.expectEqual(arr.get(2), 2);
+}
+
+test "can perform quicksort" {
+    var allocator = std.testing.allocator;
+    var arr = try MyArray(i32).init(&allocator, 10);
+    defer arr.deinit(&allocator);
+
+    arr.set(0, 3);
+    arr.set(1, 2);
+    arr.set(2, 9);
+    arr.set(3, 7);
+    arr.set(4, 1);
+    arr.set(5, 2);
+    arr.set(6, 4);
+    arr.set(7, 5);
+    arr.set(8, 6);
+    arr.set(9, 0);
     arr.sort2();
-    arr.print();
 
-    // Test Searches
+    try std.testing.expectEqual(arr.get(0), 0);
+    try std.testing.expectEqual(arr.get(1), 1);
+    try std.testing.expectEqual(arr.get(2), 2);
+}
+
+test "can perform binary search" {
+    var allocator = std.testing.allocator;
+    var arr = try MyArray(i8).init(&allocator, 10);
+    defer arr.deinit(&allocator);
     arr.zeroes();
+
     try std.testing.expect(try arr.index_of_binary(10) == null);
 
     arr.set(0, 1);

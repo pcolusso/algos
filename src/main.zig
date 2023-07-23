@@ -23,9 +23,6 @@ pub fn main() !void {
     std.debug.print("{d} is at index {any}\n", .{ chosen_elem, my_array.index_of_linear(chosen_elem) });
     std.debug.print("{d} is at index {any}\n", .{ chosen_elem, my_array.index_of_binary(chosen_elem) });
 
-    var breaks = [_]bool{ false, false, false, false, false, false, false, false, false, false, false, false, true, true, true };
-    std.debug.print("Break found at {any}\n", .{crystal.crystal(&breaks)});
-
     const MyQueue = q.Queue(i8);
     var queue = MyQueue.init(&allocator);
     defer queue.deinit();
@@ -63,6 +60,8 @@ pub fn main() !void {
 
 test {
     @import("std").testing.refAllDecls(@This());
+    _ = @import("array.zig");
     _ = @import("ll.zig");
-    //_ = @import("doublell.zig");
+    _ = @import("crystal.zig");
+    _ = @import("doublell.zig");
 }

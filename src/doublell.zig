@@ -2,7 +2,21 @@ const std = @import("std");
 
 pub fn DoublyLinkedList(comptime T: type) type {
     return struct {
-        pub const Node = struct { value: T, next: ?*Node = null, prev: ?*Node = null };
+        pub const Node = struct {
+            value: T,
+            next: ?*Node = null,
+            prev: ?*Node = null,
+
+            pub fn print(self: *const Node) void {
+                std.debug.print("Node:\n0x{x} <- ({} @ 0x{x} ) -> 0x{x}\n", .{ @ptrToInt(self.prev), self.value, @ptrToInt(self), @ptrToInt(self.next) });
+            }
+
+            pub fn init(allocator: *std.mem.Allocator, value: T) !*Node {
+                var node = try allocator.create(Node);
+                node.* = Node{ .value = value, .prev = null, .next = null };
+                return node;
+            }
+        };
 
         head: ?*Node = null,
         tail: ?*Node = null,
@@ -16,22 +30,26 @@ pub fn DoublyLinkedList(comptime T: type) type {
         pub fn deinit(self: *DoublyLinkedList(T)) void {
             var iter = self.iter_forwards();
             while (iter.next()) |node| {
+                std.debug.print("Destroying 0x{x}", .{@ptrToInt(node)});
                 self.allocator.destroy(node);
             }
         }
 
         pub const Iterator = struct {
-            list: *DoublyLinkedList(T),
             cursor: ?*Node,
 
             pub fn init(list: *DoublyLinkedList(T)) Iterator {
-                return Iterator{ .list = list, .cursor = list.head orelse null };
+                std.debug.print("\n============NEW ITER==========\n", .{});
+                return Iterator{ .cursor = list.head };
             }
 
             pub fn next(self: *Iterator) ?*Node {
-                var current = self.cursor;
+                std.debug.print("Iterating... Current is @ 0x{x}\n", .{@ptrToInt(self.cursor)});
+                const current = self.cursor;
                 if (current) |c| {
                     self.cursor = c.next;
+                    std.debug.print("Confirmed that 0x{x} is valid!\n", .{@ptrToInt(c)});
+                    c.print();
                 }
                 return current;
             }
@@ -42,8 +60,7 @@ pub fn DoublyLinkedList(comptime T: type) type {
         }
 
         pub fn prepend(self: *DoublyLinkedList(T), value: T) !void {
-            var node = try self.allocator.create(Node);
-            node.*.value = value;
+            var node = try Node.init(self.allocator, value);
 
             self.length += 1;
 
@@ -54,7 +71,10 @@ pub fn DoublyLinkedList(comptime T: type) type {
             }
 
             node.*.next = self.head;
-            self.head.*.prev = node;
+
+            if (self.head) |h| {
+                h.*.prev = node;
+            }
             self.head = node;
         }
 
@@ -136,8 +156,7 @@ pub fn DoublyLinkedList(comptime T: type) type {
         }
 
         pub fn append(self: *DoublyLinkedList(T), value: T) !void {
-            var node = try self.allocator.create(Node);
-            node.*.value = value;
+            var node = try Node.init(self.allocator, value);
 
             if (self.length == 0) {
                 self.head = node;
@@ -168,5 +187,25 @@ test "can append to a list" {
     try list.append(2);
     try list.append(3);
 
-    try std.testing.expect(list.length == 3);
+    try std.testing.expectEqual(list.length, 3);
+
+    var i: i32 = 0;
+    var iter = list.iter_forwards();
+    while (iter.next()) |node| {
+        i += 1;
+        try std.testing.expectEqual(node.value, i);
+    }
 }
+
+test "can prepend to a list" {
+    var allocator = std.testing.allocator;
+    var list = DoublyLinkedList(u32).init(&allocator);
+    defer list.deinit();
+
+    try list.prepend(1);
+    try list.prepend(2);
+    try list.prepend(3);
+
+    try std.testing.expectEqual(list.length, 3);
+}
+test "can insert_at" {}

@@ -26,7 +26,7 @@ pub fn crystal(breaks: []bool) !?usize {
     return null;
 }
 
-test {
+test "edge cases" {
     var only_one = [_]bool{true};
     try std.testing.expect(try crystal(&only_one) == @as(usize, 0));
 
@@ -38,4 +38,9 @@ test {
 
     var at_the_very_end = [_]bool{ false, false, false, false, false, true };
     try std.testing.expect(try crystal(&at_the_very_end) == @as(usize, 5));
+}
+
+test "example case" {
+    var breaks = [_]bool{ false, false, false, false, false, false, false, false, false, false, false, false, true, true, true };
+    try std.testing.expect(try crystal(&breaks) == @as(usize, 12));
 }

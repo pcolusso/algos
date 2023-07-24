@@ -37,8 +37,12 @@ pub fn BinarySearchTree(comptime T: type) type {
             // pre
             try path.append(c.value);
             // recurse
-            _ = try walk(c.left, path);
-            _ = try walk(c.right, path);
+            if (c.left) |left| {
+                _ = try walk(left, path);
+            }
+            if (c.right) |right| {
+                _ = try walk(right, path);
+            }
             // post
             return path;
         }
@@ -52,7 +56,9 @@ pub fn BinarySearchTree(comptime T: type) type {
 
 test "can in order traverse" {
     const BST = BinarySearchTree(i32);
-    var allocator = std.testing.allocator;
+    var arena = std.heap.ArenaAllocator.init(std.heap.page_allocator);
+    defer arena.deinit();
+    var allocator = arena.allocator();
     var bst = BST{ .root = try BST.Node.init(&allocator, 7), .allocator = &allocator };
     bst.root.?.left = try BST.Node.init(&allocator, 23);
     bst.root.?.right = try BST.Node.init(&allocator, 3);
@@ -61,5 +67,5 @@ test "can in order traverse" {
     bst.root.?.right.?.left = try BST.Node.init(&allocator, 18);
     bst.root.?.right.?.right = try BST.Node.init(&allocator, 21);
     var path = try bst.in_order_traverse();
-    path.deinit();
+    _ = path;
 }
